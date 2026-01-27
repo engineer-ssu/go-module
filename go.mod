@@ -1,0 +1,17 @@
+module github.com/engineer-ssu/go-module
+
+go 1.24.4
+
+require (
+	github.com/99designs/gqlgen v0.17.76
+	github.com/doug-martin/goqu/v9 v9.19.0
+	github.com/jmoiron/sqlx v1.4.0
+	github.com/lib/pq v1.10.9
+)
+
+require (
+	github.com/google/uuid v1.6.0 // indirect
+	github.com/sosodev/duration v1.3.1 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
+	github.com/vektah/gqlparser/v2 v2.5.30 // indirect
+)
