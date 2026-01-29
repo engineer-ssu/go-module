@@ -56,9 +56,10 @@ func (s *S3Service) ParseImgSrc(cfg config.Config, content *string, prefix strin
 		key := match[1]
 		key = strings.ReplaceAll(key, cfg.String("cdn_uri")+"/", "")
 		key = filepath.Base(key)
-		source := filepath.Join(cfg.String("s3_bucket"), cfg.String("s3_temp_prefix"), key)
+		bucket := cfg.String("s3_bucket")
+		source := filepath.Join(bucket, cfg.String("s3_temp_prefix"), key)
 		dest := filepath.Join("media", prefix, key)
-		err := s.TransferObject(cfg, source, dest)
+		err := s.TransferObject(cfg, bucket, source, dest)
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -69,9 +70,9 @@ func (s *S3Service) ParseImgSrc(cfg config.Config, content *string, prefix strin
 }
 
 // TransferObject 임시저장소에 있는 오브젝트를 배포저장소로 복사하기
-func (s *S3Service) TransferObject(cfg config.Config, source string, dest string) error {
+func (s *S3Service) TransferObject(cfg config.Config, bucket string, source string, dest string) error {
 	input := &s3.CopyObjectInput{
-		Bucket:     aws.String(cfg.String("s3_bucket")),
+		Bucket:     aws.String(bucket),
 		Key:        aws.String(dest),
 		CopySource: aws.String(source),
 	}
