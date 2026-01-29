@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/engineer-ssu/go-module/config"
 )
 
 // TransferObjectIfNotExist 는 배포 경로에 파일이 없다면 임시 경로에서 복사해옵니다.
@@ -46,7 +45,7 @@ func (s *S3Service) TransferObjectIfNotExist(ctx context.Context, filename strin
 }
 
 // ParseImgSrc 텍스트에디터에서 로컬파일url을 S3url로 바꾸고 파일도 복사하기
-func (s *S3Service) ParseImgSrc(cfg config.Config, content *string, prefix string) *string {
+func (s *S3Service) ParseImgSrc(content *string, prefix string) *string {
 	if content == nil {
 		return nil
 	}
@@ -54,16 +53,16 @@ func (s *S3Service) ParseImgSrc(cfg config.Config, content *string, prefix strin
 	newContent := *content
 	for _, match := range re.FindAllStringSubmatch(*content, -1) {
 		key := match[1]
-		key = strings.ReplaceAll(key, cfg.String("cdn_uri")+"/", "")
+		key = strings.ReplaceAll(key, s.config.CdnUri+"/", "")
 		key = filepath.Base(key)
-		bucket := cfg.String("s3_bucket")
-		source := filepath.Join(bucket, cfg.String("s3_temp_prefix"), key)
+		bucket := s.config.Bucket
+		source := filepath.Join(bucket, s.config.TempPrefix, key)
 		dest := filepath.Join("media", prefix, key)
 		err := s.TransferObject(bucket, source, dest)
 		if err != nil {
 			fmt.Println(err)
 		}
-		newSrc := fmt.Sprintf("%s/%s", cfg.String("cdn_uri"), dest)
+		newSrc := fmt.Sprintf("%s/%s", s.config.CdnUri, dest)
 		newContent = strings.ReplaceAll(newContent, match[1], newSrc)
 	}
 	return &newContent
