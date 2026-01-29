@@ -12,7 +12,7 @@ import (
 )
 
 // TransferObjectIfNotExist 는 배포 경로에 파일이 없다면 임시 경로에서 복사해옵니다.
-func (s *S3Service) TransferObjectIfNotExist(filename string, sourceDir string, destDir string) error {
+func (s *S3Service) TransferObjectIfNotExist(filename string) error {
 	destKey := fmt.Sprintf("%s/%s", s.config.DestPrefix, filename) // media 가 들어가야함
 
 	// 1. 파일 존재 여부 확인 (HeadObject가 GetObject보다 비용이 저렴하고 효율적입니다)
