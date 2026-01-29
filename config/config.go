@@ -29,6 +29,10 @@ func New(configPath string) (*Config, error) {
 	return &Config{k: k}, nil
 }
 
+func (c *Config) GetConfig() *koanf.Koanf {
+	return c.k
+}
+
 func (c *Config) Get(key string) interface{} {
 	return c.k.Get(key)
 }
