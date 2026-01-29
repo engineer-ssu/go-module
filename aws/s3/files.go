@@ -13,7 +13,7 @@ import (
 
 // TransferObjectIfNotExist 는 배포 경로에 파일이 없다면 임시 경로에서 복사해옵니다.
 func (s *S3Service) TransferObjectIfNotExist(filename string, sourceDir string, destDir string) error {
-	destKey := fmt.Sprintf("%s/%s", destDir, filename) // media 가 들어가야함
+	destKey := fmt.Sprintf("%s/%s", s.config.DestPrefix, filename) // media 가 들어가야함
 
 	// 1. 파일 존재 여부 확인 (HeadObject가 GetObject보다 비용이 저렴하고 효율적입니다)
 	headInput := &s3.HeadObjectInput{
@@ -27,7 +27,7 @@ func (s *S3Service) TransferObjectIfNotExist(filename string, sourceDir string, 
 	}
 
 	// 2. 파일이 없을 경우 CopyObject 수행 (기존 TransferObject 로직을 내재화)
-	sourceKey := fmt.Sprintf("%s/%s/%s", s.config.Bucket, sourceDir, filename) // temp 디렉토리임
+	sourceKey := fmt.Sprintf("%s/%s/%s", s.config.Bucket, s.config.SourcePrefix, filename)
 
 	err = s.TransferObject(sourceKey, destKey)
 	if err != nil {
@@ -49,8 +49,8 @@ func (s *S3Service) ParseImgSrc(content *string, prefix string) (*string, error)
 		key = strings.ReplaceAll(key, s.config.CdnUri+"/", "")
 		key = filepath.Base(key)
 		bucket := s.config.Bucket
-		source := filepath.Join(bucket, s.config.TempPrefix, key)
-		dest := filepath.Join(s.config.MediaPrefix, prefix, key)
+		source := filepath.Join(bucket, s.config.SourcePrefix, key)
+		dest := filepath.Join(s.config.DestPrefix, prefix, key)
 		err := s.TransferObject(source, dest)
 		if err != nil {
 			fmt.Println(err)

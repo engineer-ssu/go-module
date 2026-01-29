@@ -6,11 +6,11 @@ import (
 
 // Config 는 S3 관련 설정을 외부에서 주입받기 위한 구조체입니다.
 type Config struct {
-	Bucket      string
-	TempPrefix  string // 임시 저장소 경로 (예: "temp")
-	MediaPrefix string // 배포 저장소 경로 (예: "media")
-	CdnUri      string
-	Key         string
+	Bucket       string
+	SourcePrefix string // 임시 저장소 경로 (예: "temp")
+	DestPrefix   string // 배포 저장소 경로 (예: "media")
+	CdnUri       string
+	Key          string
 }
 
 // S3Service 는 라이브러리의 메인 구조체입니다.
