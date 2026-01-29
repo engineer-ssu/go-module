@@ -1,7 +1,6 @@
 package s3
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"path/filepath"
@@ -13,8 +12,8 @@ import (
 )
 
 // TransferObjectIfNotExist 는 배포 경로에 파일이 없다면 임시 경로에서 복사해옵니다.
-func (s *S3Service) TransferObjectIfNotExist(ctx context.Context, filename string) error {
-	destKey := fmt.Sprintf("%s/%s", s.config.MediaPrefix, filename)
+func (s *S3Service) TransferObjectIfNotExist(filename string, sourceDir string, destDir string) error {
+	destKey := fmt.Sprintf("%s/%s", destDir, filename) // media 가 들어가야함
 
 	// 1. 파일 존재 여부 확인 (HeadObject가 GetObject보다 비용이 저렴하고 효율적입니다)
 	headInput := &s3.HeadObjectInput{
@@ -22,22 +21,15 @@ func (s *S3Service) TransferObjectIfNotExist(ctx context.Context, filename strin
 		Key:    aws.String(destKey),
 	}
 
-	_, err := s.svc.HeadObjectWithContext(ctx, headInput)
+	_, err := s.svc.HeadObject(headInput)
 	if err == nil {
-		// 파일이 이미 존재함
 		return nil
 	}
 
 	// 2. 파일이 없을 경우 CopyObject 수행 (기존 TransferObject 로직을 내재화)
-	sourceKey := fmt.Sprintf("%s/%s/%s", s.config.Bucket, s.config.TempPrefix, filename)
+	sourceKey := fmt.Sprintf("%s/%s/%s", s.config.Bucket, sourceDir, filename) // temp 디렉토리임
 
-	copyInput := &s3.CopyObjectInput{
-		Bucket:     aws.String(s.config.Bucket),
-		CopySource: aws.String(sourceKey),
-		Key:        aws.String(destKey),
-	}
-
-	_, err = s.svc.CopyObjectWithContext(ctx, copyInput)
+	err = s.TransferObject(sourceKey, destKey)
 	if err != nil {
 		return fmt.Errorf("failed to transfer object from %s to %s: %w", sourceKey, destKey, err)
 	}
@@ -59,7 +51,7 @@ func (s *S3Service) ParseImgSrc(content *string, prefix string) (*string, error)
 		bucket := s.config.Bucket
 		source := filepath.Join(bucket, s.config.TempPrefix, key)
 		dest := filepath.Join(s.config.MediaPrefix, prefix, key)
-		err := s.TransferObject(bucket, source, dest)
+		err := s.TransferObject(source, dest)
 		if err != nil {
 			fmt.Println(err)
 			return nil, err
@@ -71,11 +63,11 @@ func (s *S3Service) ParseImgSrc(content *string, prefix string) (*string, error)
 }
 
 // TransferObject 임시저장소에 있는 오브젝트를 배포저장소로 복사하기
-func (s *S3Service) TransferObject(bucket string, source string, dest string) error {
+func (s *S3Service) TransferObject(sourceKey string, destKey string) error {
 	input := &s3.CopyObjectInput{
-		Bucket:     aws.String(bucket),
-		Key:        aws.String(dest),
-		CopySource: aws.String(source),
+		Bucket:     aws.String(s.config.Bucket),
+		Key:        aws.String(destKey),
+		CopySource: aws.String(sourceKey),
 	}
 	_, err := s.svc.CopyObject(input)
 	if err != nil {

@@ -10,6 +10,7 @@ type Config struct {
 	TempPrefix  string // 임시 저장소 경로 (예: "temp")
 	MediaPrefix string // 배포 저장소 경로 (예: "media")
 	CdnUri      string
+	Key         string
 }
 
 // S3Service 는 라이브러리의 메인 구조체입니다.
