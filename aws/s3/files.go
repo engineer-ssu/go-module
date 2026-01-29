@@ -2,6 +2,7 @@ package s3
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
@@ -45,9 +46,9 @@ func (s *S3Service) TransferObjectIfNotExist(ctx context.Context, filename strin
 }
 
 // ParseImgSrc 텍스트에디터에서 로컬파일url을 S3url로 바꾸고 파일도 복사하기
-func (s *S3Service) ParseImgSrc(content *string, prefix string) *string {
+func (s *S3Service) ParseImgSrc(content *string, prefix string) (*string, error) {
 	if content == nil {
-		return nil
+		return nil, errors.New("content empty")
 	}
 	re := regexp.MustCompile(`src="([^"]+)"[^>]*>`)
 	newContent := *content
@@ -57,15 +58,16 @@ func (s *S3Service) ParseImgSrc(content *string, prefix string) *string {
 		key = filepath.Base(key)
 		bucket := s.config.Bucket
 		source := filepath.Join(bucket, s.config.TempPrefix, key)
-		dest := filepath.Join("media", prefix, key)
+		dest := filepath.Join(s.config.MediaPrefix, prefix, key)
 		err := s.TransferObject(bucket, source, dest)
 		if err != nil {
 			fmt.Println(err)
+			return nil, err
 		}
 		newSrc := fmt.Sprintf("%s/%s", s.config.CdnUri, dest)
 		newContent = strings.ReplaceAll(newContent, match[1], newSrc)
 	}
-	return &newContent
+	return &newContent, nil
 }
 
 // TransferObject 임시저장소에 있는 오브젝트를 배포저장소로 복사하기
