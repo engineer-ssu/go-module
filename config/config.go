@@ -62,7 +62,7 @@ func init() {
 }
 
 func test() {
-	fmt.Println()
+	fmt.Println("test")
 }
 
 func FindConfigFilePath() string {
