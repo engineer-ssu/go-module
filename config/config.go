@@ -1,9 +1,6 @@
 package config
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/knadh/koanf/parsers/yaml"
@@ -16,22 +13,20 @@ type Config struct {
 	k *koanf.Koanf
 }
 
-func (c *Config) Load() {
-	var k = koanf.New(".")
+func New(configPath string) (*Config, error) {
+	k := koanf.New(".")
 
-	configPath := FindConfigFilePath()
 	if err := k.Load(file.Provider(configPath), yaml.Parser()); err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	k.Load(env.Provider("ENV", ".", func(s string) string {
-		return strings.ToLower(
-			strings.TrimPrefix(s, "ENV_"),
-		)
-	}), nil)
-	k.Load(env.Provider("AWS", ".", func(s string) string {
-		return strings.ToLower(s)
-	}), nil)
-	c.k = k
+
+	if err := k.Load(env.Provider("ENV_", ".", func(s string) string {
+		return strings.ToLower(strings.TrimPrefix(s, "ENV_"))
+	}), nil); err != nil {
+		return nil, err
+	}
+
+	return &Config{k: k}, nil
 }
 
 func (c *Config) Get(key string) interface{} {
@@ -51,39 +46,4 @@ func (c *Config) Bool(key string) bool {
 }
 func (c *Config) Float64(key string) float64 {
 	return c.k.Float64(key)
-}
-
-var config *Config
-
-func init() {
-	config = &Config{}
-	config.Load()
-	test()
-}
-
-func test() {
-	fmt.Println("test")
-}
-
-func FindConfigFilePath() string {
-	cwd, err := os.Getwd()
-	if err != nil {
-		return "config/config.yml"
-	}
-
-	possiblePaths := []string{
-		filepath.Join(cwd, "config.yml"),
-		filepath.Join(cwd, "config.yaml"),
-	}
-
-	for _, path := range possiblePaths {
-		if _, err := os.Stat(path); err == nil {
-			return path
-		}
-	}
-	return "config/config.yml"
-}
-
-func GetConfig() *Config {
-	return config
 }
