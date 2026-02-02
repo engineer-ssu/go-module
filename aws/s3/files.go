@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/machinerd/go-module/idgen"
+	"github.com/engineer-ssu/go-module/idgen"
 )
 
 func (s *S3Service) TransferObjectIfNotExist(filename string) error {
